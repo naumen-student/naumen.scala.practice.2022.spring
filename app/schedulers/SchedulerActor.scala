@@ -15,8 +15,9 @@ import scala.util.{Failure, Success, Try}
 @Singleton
 class SchedulerActor @Inject()(controller: JobAggregatorController)(implicit ec: ExecutionContext) extends Actor {
   override def receive: Receive = {
-    case params: (String, String) => {
-      Try(Await.result(controller.processResponse(controller.buildRequest(Option(params._1), Option(params._2))), 10 seconds)) match {
+    case params: Seq[(String, String)] => {
+      for(pair <- params)
+      Try(Await.result(controller.processResponse(controller.buildRequest(Option(pair._1), Option(pair._2))), 10 seconds)) match {
         case Success(value) => value match {
           case Some(list) => controller.updateDB(list)
           case None => print("Couldn't get list of jobs")
@@ -24,7 +25,7 @@ class SchedulerActor @Inject()(controller: JobAggregatorController)(implicit ec:
         case Failure(_) => print("Failed response processing")
       }
     }
-      print(s"tick with params ${params._1} ${params._2}\n")
+      print(s"tick with params $params\n")
     case _ => println("wrong receive")
   }
 }
