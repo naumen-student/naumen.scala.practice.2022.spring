@@ -8,7 +8,7 @@ import play.api.Logger
 import scala.concurrent.{Await, ExecutionContext}
 import controllers.JobAggregatorController
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 

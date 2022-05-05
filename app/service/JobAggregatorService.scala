@@ -8,6 +8,8 @@ import slick.jdbc.PostgresProfile.api._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 @Singleton
 class JobAggregatorService @Inject()(val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
@@ -19,12 +21,12 @@ class JobAggregatorService @Inject()(val dbConfigProvider: DatabaseConfigProvide
 
     def deleteJob(id: String): Future[Int] = {
         val deletionAction = jobTable.filter(_.id === id).delete
-        dbConfig.db.run(deletionAction)
+        db.run(deletionAction)
     }
 
     def getJob(id: String): Future[Option[Job]] = {
         val filterAction = jobTable.filter(_.id === id).result.headOption
-        dbConfig.db.run(filterAction)
+        db.run(filterAction)
     }
 
     def getAllJobs() : Future[Seq[Job]] = {

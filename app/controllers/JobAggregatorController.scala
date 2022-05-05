@@ -4,12 +4,10 @@ import javax.inject._
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.ws._
-import play.api.http.HttpEntity
 import service.JobAggregatorService
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import akka.actor._
 
 import scala.util.{Failure, Success, Try}
 import model.Job
@@ -62,8 +60,9 @@ class JobAggregatorController @Inject()(ws: WSClient,
 }
 
   def updateDB(jobs: List[Job]): Unit = {
-    for (job <- jobs) jobAggregatorService.addJob(job)
+    for (job <- jobs) Await.result(jobAggregatorService.addJob(job), Duration.Inf)
   }
+
 
   def loadJobs(tag: Option[String], area: Option[String]) = Action {
     implicit request: Request[AnyContent] => {
@@ -74,7 +73,11 @@ class JobAggregatorController @Inject()(ws: WSClient,
         }
         case Failure(_) => print("Failed response processing")
       }
-      Ok("Done")
+      Ok("Loading done")
     }
+  }
+
+  def showJobs() = Action {
+    Ok(Json.toJson(Await.result(jobAggregatorService.getAllJobs(), Duration.Inf)))
   }
 }
