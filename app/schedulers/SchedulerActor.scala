@@ -16,13 +16,14 @@ import scala.util.{Failure, Success, Try}
 class SchedulerActor @Inject()(controller: JobAggregatorController)(implicit ec: ExecutionContext) extends Actor {
   override def receive: Receive = {
     case params: Seq[(String, String)] => {
-      for(pair <- params)
-      Try(Await.result(controller.processResponse(controller.buildRequest(Option(pair._1), Option(pair._2))), 10 seconds)) match {
-        case Success(value) => value match {
-          case Some(list) => controller.updateDB(list)
-          case None => print("Couldn't get list of jobs")
+      for(pair <- params) {
+        Try(Await.result(controller.processJobResponse(controller.buildJobRequest(Some(pair._1), Some(pair._2))), Duration.Inf)) match {
+          case Success(value) => value match {
+            case Some(list) => controller.updateDB(list)
+            case None => print("Couldn't get list of jobs")
+          }
+          case Failure(_) => print("Failed job response processing\n")
         }
-        case Failure(_) => print("Failed response processing")
       }
     }
       print(s"tick with params $params\n")
