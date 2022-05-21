@@ -21,9 +21,11 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
     ws.url("https://api.hh.ru/vacancies").addQueryStringParameters {
       keyword match {
         case Some(value) => "text" -> value
+        case None => "text" -> null
       }
       area match {
         case Some(value) => "area" -> value
+        case None => "text" -> null
       }
     }
   }
