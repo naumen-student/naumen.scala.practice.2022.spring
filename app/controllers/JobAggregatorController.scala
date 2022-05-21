@@ -13,7 +13,7 @@ class JobAggregatorController @Inject()(val controllerComponents: ControllerComp
 
   def index(text: String, area: Int) = Action.async { implicit request: Request[AnyContent] =>
 
-    jobAggregatorService.parse(text, area).map(_ => Ok(""))
-      .recover(x => InternalServerError("Some exception has occurred"))
+    jobAggregatorService.aggregateData(text, area).map(_ => Ok(""))
+      .recover(exception => InternalServerError("Following exception has occurred: " + exception.getMessage))
   }
 }

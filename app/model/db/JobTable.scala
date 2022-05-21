@@ -2,7 +2,6 @@ package model.db
 
 import model.Job
 import slick.jdbc.PostgresProfile.api._
-import java.util.UUID
 
 class JobTable(tag: Tag) extends Table[Job](tag, "job") {
   def id = column[Int]("id", O.PrimaryKey)
@@ -13,23 +12,23 @@ class JobTable(tag: Tag) extends Table[Job](tag, "job") {
 
   def responsibility = column[Option[String]]("responsibility")
 
-  def alternate_url = column[Option[String]]("alternate_url")
+  def alternateUrl = column[Option[String]]("alternate_url")
 
-  def salary_from = column[Option[Int]]("salary_from")
+  def salaryFrom = column[Option[Int]]("salary_from")
 
-  def salary_to = column[Option[Int]]("salary_to")
+  def salaryTo = column[Option[Int]]("salary_to")
 
-  def salary_currency = column[Option[String]]("salary_currency")
+  def salaryCurrency = column[Option[String]]("salary_currency")
 
-  def salary_gross = column[Option[Boolean]]("salary_gross")
+  def salaryGross = column[Option[Boolean]]("salary_gross")
 
   def city = column[Option[String]]("city")
 
-  def key_word = column[Option[String]]("key_word")
+  def keyWord = column[Option[String]]("key_word")
 
 
   def * =
-    (id, title, requirement, responsibility, alternate_url, salary_from, salary_to, salary_currency, salary_gross,
-      city, key_word) <> (Job.tupled, Job.unapply)
+    (id, title, requirement, responsibility, alternateUrl, salaryFrom, salaryTo, salaryCurrency, salaryGross,
+      city, keyWord) <> (Job.tupled, Job.unapply)
 }
 
