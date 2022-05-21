@@ -18,18 +18,17 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
     logger.info(s"Keyword: ${keyword.getOrElse("none")}")
     logger.info(s"AreaId: ${area.getOrElse("none")}")
 
-    ws.url("https://api.hh.ru/vacancies").addQueryStringParameters {
+    ws.url("https://api.hh.ru/vacancies").addQueryStringParameters(
       keyword match {
         case Some(value) => logger.info(s"Request with keyword $value")
           "text" -> value
         case None => "text" -> null
-      }
+      }).addQueryStringParameters (
       area match {
         case Some(value) => logger.info(s"Request with areaId $value")
           "area" -> value
         case None => "area" -> null
-      }
-    }
+      })
   }
 
   def processJobResponse(request: WSRequest): Future[Option[List[Job]]] = {
