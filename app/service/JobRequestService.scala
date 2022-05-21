@@ -5,9 +5,9 @@ import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSClient, WSRequest}
 
+import scala.collection.immutable._
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
@@ -20,11 +20,13 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
 
     ws.url("https://api.hh.ru/vacancies").addQueryStringParameters {
       keyword match {
-        case Some(value) => "text" -> value
+        case Some(value) => logger.info(s"Request with keyword $value")
+          "text" -> value
         case None => "text" -> null
       }
       area match {
-        case Some(value) => "area" -> value
+        case Some(value) => logger.info(s"Request with areaId $value")
+          "area" -> value
         case None => "text" -> null
       }
     }
@@ -43,9 +45,8 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
       case Some(value) => ws.url("https://api.hh.ru/areas").get().map {
         response =>
           Json.parse(response.body) match {
-            case result: JsValue => result.asOpt[List[Area]] match {
-              case Some(areas) => areas.foldLeft(List[Area]())((accumulator, area) => accumulator ++ area.areas.getOrElse(List[Area]()))
-                .find(_.name == value).map(_.id)
+            case result: JsValue => result.asOpt[Seq[Area]] match {
+              case Some(areas) => collectChildren(areas).find(_.name == value).map(_.id)
               case None => logger.error(s"Parsing of areas failed, ${response.body}")
                 None
             }
@@ -56,5 +57,14 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
       case None => logger.info(s"No area name to translate to area id")
         Future(None)
     }
+  }
+
+  private def collectChildren(areas: Seq[Area]): Seq[Area] =
+  {
+    areas.foldLeft(Seq[Area]())((accumulator, area) =>
+      area.areas match {
+        case Some(children) => accumulator ++ collectChildren(children) :+ area
+        case None => accumulator :+ area
+      })
   }
 }

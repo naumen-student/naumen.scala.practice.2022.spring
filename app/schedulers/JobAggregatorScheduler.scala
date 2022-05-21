@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 
 class JobAggregatorScheduler @Inject()(val system: ActorSystem, @Named("job-actor") val jobsActor: ActorRef, configuration: Configuration)(implicit ec: ExecutionContext) {
   val logger = Logger("debug")
-
+  val doRun = configuration.getOptional[Boolean]("scheduler.run")
   val frequency = configuration.getOptional[Int]("request.frequency")
   val initialDelay = configuration.getOptional[Int]("request.initialDelay")
   val tagKeywords = configuration.getOptional[Seq[String]]("request.keywords.tags")
@@ -22,13 +22,19 @@ class JobAggregatorScheduler @Inject()(val system: ActorSystem, @Named("job-acto
     logger.warn("Empty list of area names is being used for the scheduler")
     Seq[String]()
   })
-  var actor = system.scheduler.schedule(
-    initialDelay.getOrElse {
-      logger.warn("Default initial delay is being used for the scheduler")
-      5
-    }.seconds,
-    frequency.getOrElse{
-      logger.warn("Default frequency is being used for the scheduler")
-      5
-    }.seconds, jobsActor, zipped)
+
+  if(doRun.getOrElse {
+    logger.warn("Scheduler is not being run")
+    false
+  }) {
+    var actor = system.scheduler.schedule(
+      initialDelay.getOrElse {
+        logger.warn("Default initial delay is being used for the scheduler")
+        5
+      }.seconds,
+      frequency.getOrElse {
+        logger.warn("Default frequency is being used for the scheduler")
+        5
+      }.seconds, jobsActor, zipped)
+  }
 }

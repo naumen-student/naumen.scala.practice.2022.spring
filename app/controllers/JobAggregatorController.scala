@@ -31,4 +31,8 @@ class JobAggregatorController @Inject()(val controllerComponents: ControllerComp
   def showJobs() = Action.async {
     jobAggregatorService.getAllJobs().flatMap((jobs: Seq[Job]) => Future(Ok(Json.toJson(jobs))))
   }
+
+  def parseArea(name: Option[String]) = Action.async {
+    jobRequestService.getAreaId(name).flatMap(result => Future(Ok(s"AreaId: ${result.getOrElse("none")}")))
+  }
 }
