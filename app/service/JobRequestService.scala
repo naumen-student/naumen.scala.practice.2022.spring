@@ -16,7 +16,7 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
   def buildJobRequest(area: Option[String], keyword: Option[String]): WSRequest = {
     logger.info("Building request...")
     logger.info(s"Keyword: ${keyword.getOrElse("none")}")
-    logger.info(s"Area: ${area.getOrElse("none")}")
+    logger.info(s"AreaId: ${area.getOrElse("none")}")
 
     ws.url("https://api.hh.ru/vacancies").addQueryStringParameters {
       keyword match {
@@ -27,7 +27,7 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
       area match {
         case Some(value) => logger.info(s"Request with areaId $value")
           "area" -> value
-        case None => "text" -> null
+        case None => "area" -> null
       }
     }
   }

@@ -5,7 +5,7 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.JobAggregatorController.index()
-GET     /loadJobs                   controllers.JobAggregatorController.loadJobs(tag: Option[String], area: Option[String])
+GET     /loadJobs                   controllers.JobAggregatorController.loadJobs(keyword: Option[String], area: Option[String])
 GET     /showJobs                   controllers.JobAggregatorController.showJobs()
 GET     /areaId                     controllers.JobAggregatorController.parseArea(name: Option[String])
 
