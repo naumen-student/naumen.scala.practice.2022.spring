@@ -33,6 +33,7 @@
 
   <logger name="play" level="INFO" />
   <logger name="application" level="DEBUG" />
+  <logger name="debug" level="INFO, ERROR" />
 
   <root level="WARN">
     <appender-ref ref="ASYNCFILE" />

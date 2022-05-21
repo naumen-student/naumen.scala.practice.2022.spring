@@ -2,31 +2,33 @@ package schedulers
 
 import javax.inject.{Inject, Singleton}
 import akka.actor.Actor
-import org.joda.time.DateTime
 import play.api.Logger
+import service.JobRequestService
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import service.JobAggregatorService
 
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
 
 @Singleton
-class SchedulerActor @Inject()(jobAggregatorService: JobAggregatorService)(implicit ec: ExecutionContext) extends Actor {
+class SchedulerActor @Inject()(jobRequestService: JobRequestService, jobAggregatorService: JobAggregatorService)(implicit ec: ExecutionContext)
+  extends Actor {
+  val logger = Logger("debug")
+
   override def receive: Receive = {
-    case params: Seq[(String, String)] => {
-      for(pair <- params) {
-        Try(Await.result(jobAggregatorService.processJobResponse(jobAggregatorService.buildJobRequest(Some(pair._1), Some(pair._2))), Duration.Inf)) match {
-          case Success(value) => value match {
-            case Some(list) => for(task <- jobAggregatorService.addJobs(list, pair._2, pair._1)) Await.result(task, Duration.Inf)
-            case None => print("Couldn't get list of jobs")
-          }
-          case Failure(_) => print("Failed job response processing\n")
-        }
-      }
-    }
-      print(s"tick with params $params\n")
-    case _ => println("wrong receive")
+    case params: Seq[(String, String)] =>
+      params.map(pair => {
+        var area = pair._2
+        var keyword = pair._1
+        logger.info(s"Scheduler tick with params $area $keyword\n")
+        jobRequestService.getAreaId(Some(area)).flatMap(areaId =>
+          jobRequestService.processJobResponse(jobRequestService.buildJobRequest(areaId, Some(keyword))).flatMap({
+            case Some(value) => jobAggregatorService.addJobs(value, Some(area), Some(keyword)).flatMap(_ => Future())
+            case None => logger.error(s"Couldn't get list of jobs for params $area $keyword\n")
+              Future()
+          }))
+      })
+    case _ => logger.error(s"Wrong receive message!")
   }
 }

@@ -1,26 +1,26 @@
 -- Create Table
 
 -- !Ups
-CREATE TABLE jobtable (
+CREATE TABLE jobTable (
     id VARCHAR(32),
     title VARCHAR(512),
-    requirements TEXT,
-    responsibility TEXT,
+    requirements TEXT NULL,
+    responsibility TEXT NULL,
     salaryFrom INT,
     salaryTo INT,
-    salaryCurr VARCHAR(8),
+    salaryCurr VARCHAR(8) NULL,
     url TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE jobrequesttable (
-    jobid VARCHAR(32),
-    city VARCHAR(64),
-    keyword TEXT,
+CREATE TABLE jobRequestTable (
+    jobId VARCHAR(32),
+    city VARCHAR(64) NULL,
+    keyword TEXT NULL,
     FOREIGN KEY(jobid) REFERENCES jobtable(id)
 )
 
 -- !Downs
-DROP TABLE jobrequesttable CASCADE;
+DROP TABLE jobRequestTable CASCADE;
 
 DROP TABLE jobtable;
