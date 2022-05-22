@@ -2,6 +2,7 @@ package schedulers
 
 import javax.inject.{Inject, Singleton}
 import akka.actor.Actor
+import model.Job
 import play.api.Logger
 import service.JobRequestService
 
@@ -24,7 +25,7 @@ class SchedulerActor @Inject()(jobRequestService: JobRequestService, jobAggregat
         logger.info(s"Scheduler tick with params $area $keyword\n")
         jobRequestService.getAreaId(Some(area)).flatMap(areaId =>
           jobRequestService.processJobResponse(jobRequestService.buildJobRequest(areaId, Some(keyword))).flatMap({
-            case Some(value) => jobAggregatorService.addJobs(value, Some(area), Some(keyword)).flatMap(_ => Future())
+            case Some(value) => jobAggregatorService.addJobs(value.map(dto => dto : Job), Some(area), Some(keyword)).flatMap(_ => Future())
             case None => logger.error(s"Couldn't get list of jobs for params $area $keyword\n")
               Future()
           }))

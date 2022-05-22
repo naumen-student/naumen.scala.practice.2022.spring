@@ -31,9 +31,9 @@ class JobRequestService @Inject()(ws: WSClient)(implicit ec: ExecutionContext) {
       })
   }
 
-  def processJobResponse(request: WSRequest): Future[Option[List[Job]]] = {
+  def processJobResponse(request: WSRequest): Future[Option[List[JobDTO]]] = {
     request.get().map(response => Json.parse(response.body)("items") match {
-      case result: JsValue => result.asOpt[List[Job]]
+      case result: JsValue => result.asOpt[List[JobDTO]]
       case _ => logger.error(s"Couldn't parse jobs json, ${response.body}")
         None
     })
