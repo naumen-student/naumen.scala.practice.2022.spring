@@ -22,10 +22,11 @@ class JobAggregatorService @Inject()(ws: WSClient,
                                      configuration: Configuration,
                                      val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
 
+  val logger: Logger = Logger("JobAggregatorService")
   val perPage: Int = configuration.getOptional[Int]("perPage") match {
     case Some(value) => value
     case None =>
-      Logger("play").warn("perPage is not configured. The default value(100) will be used")
+      logger.warn("perPage is not configured. The default value(100) will be used")
       100
   }
 
@@ -39,8 +40,8 @@ class JobAggregatorService @Inject()(ws: WSClient,
 
     ws.url(s"https://api.hh.ru/vacancies?text=$text&area=$area&per_page=$perPage&page=0")
       .get()
-      .flatMap(x => getJobs(x.json, text, area))
-      .map(buff => buff.foreach(x => addToDB(x)))
+      .flatMap(response => getJobs(response.json, text, area))
+      .map(buff => buff.foreach(job => addToDB(job)))
   }
 
   /**
@@ -58,7 +59,7 @@ class JobAggregatorService @Inject()(ws: WSClient,
           area <- areas
         } regionsMap.map(x => aggregateData(keyWord, x(area)))
       }
-      case Failure(exception) => Logger("play").error(exception.getMessage, exception)
+      case Failure(exception) => logger.error(exception.getMessage, exception)
     }
   }
 
@@ -73,15 +74,15 @@ class JobAggregatorService @Inject()(ws: WSClient,
     def handleJobs(jobs: Try[List[Job]]) = {
       jobs match {
         case Success(value) => value
-        case Failure(exception) => Logger("play").error(exception.getMessage, exception)
+        case Failure(exception) => logger.error(exception.getMessage, exception)
           Nil
       }
     }
 
-    def parseAllPages(areaText: String) = {
+    def parseAllPages(areaText: String): Future[List[Job]] = {
       val pages = firstResp.asOpt[HolderDTO] match {
         case Some(holder) => holder.pages
-        case None => throw new ClassCastException("json can't be parsed: " + firstResp.toString)
+        case None => return Future.failed(new ClassCastException("json can't be parsed: " + firstResp.toString))
       }
       val jobs: List[Job] = handleJobs(getJobsFromPage(firstResp, keyWord, areaText))
 
@@ -95,8 +96,8 @@ class JobAggregatorService @Inject()(ws: WSClient,
 
     getRegions() match {
       case Success(value) => value.flatMap(x => parseAllPages(x._1(area)))
-      case Failure(exception) => Logger("play").error(exception.getMessage, exception)
-        Future.successful(Nil)
+      case Failure(exception) => logger.error(exception.getMessage, exception)
+        Future.failed(exception)
     }
   }
 
